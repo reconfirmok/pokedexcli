@@ -5,16 +5,23 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/reconfirmok/pokedexcli/internal/pokeapi"
 )
 
 type cliCommands struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
 }
 
-func startRepl() {
+type config struct {
+	pokeapiClient    pokeapi.Client
+	nextLocationsURL *string
+	prevLocationsURL *string
+}
 
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -32,7 +39,7 @@ func startRepl() {
 		commandName := words[0]
 		command, exists := getCommands()[commandName]
 		if exists {
-			if err := command.callback(); err != nil {
+			if err := command.callback(cfg); err != nil {
 				fmt.Println(err)
 			}
 			continue
@@ -57,6 +64,16 @@ func getCommands() map[string]cliCommands {
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
+		},
+		"map": {
+			name:        "map",
+			description: "Displays the next 20 locations area",
+			callback:    commandMapf,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays the previous 20 locations area",
+			callback:    commandMapb,
 		},
 		"exit": {
 			name:        "exit",
